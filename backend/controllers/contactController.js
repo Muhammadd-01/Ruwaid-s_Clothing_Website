@@ -1,4 +1,16 @@
+import nodemailer from 'nodemailer';
 import Contact from '../models/Contact.js';
+
+// Transporter for sending emails
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: 'ruwaidclothing@gmail.com',
+        // Note: For Gmail, the user will need to generate an "App Password" 
+        // if they have 2FA enabled, and put it in their .env file
+        pass: process.env.EMAIL_PASSWORD || 'your_app_password_here'
+    }
+});
 
 // @desc    Submit a contact message
 // @route   POST /api/contact
@@ -14,11 +26,28 @@ export const submitContact = async (req, res, next) => {
             message
         });
 
-        // In a real application, you would send an email here using implementing Nodemailer
-        // For now, we simulate the email sending by logging it
-        console.log(`📩 New Contact Message from ${name} (${email}): ${subject}`);
-        console.log(`To: ruwaidclothing@gmail.com`);
-        console.log(`Message: ${message}`);
+        // Send actual email
+        const mailOptions = {
+            from: 'ruwaidclothing@gmail.com',
+            to: 'ruwaidclothing@gmail.com',
+            subject: `Contact Form: ${subject}`,
+            html: `
+                <h3>New Contact Message</h3>
+                <p><strong>Name:</strong> ${name}</p>
+                <p><strong>Email:</strong> ${email}</p>
+                <p><strong>Subject:</strong> ${subject}</p>
+                <p><strong>Message:</strong></p>
+                <p>${message}</p>
+            `
+        };
+
+        try {
+            await transporter.sendMail(mailOptions);
+            console.log(`📩 Email sent to ruwaidclothing@gmail.com`);
+        } catch (emailError) {
+            console.error('❌ Email failed to send:', emailError.message);
+            // We don't fail the request if email fails, as long as it's saved to DB
+        }
 
         res.status(201).json({
             success: true,

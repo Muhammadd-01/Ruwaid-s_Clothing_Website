@@ -18,8 +18,11 @@ const Contact = () => {
         setLoading(true);
 
         try {
+            // Add 2-second delay for UX as per user request
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
             await contactAPI.submit(formData);
-            toast.success('Message sent! A confirmation has been sent to ruwaidclothing@gmail.com');
+            toast.success('Message sent successfully!');
             setFormData({ name: '', email: '', subject: '', message: '' });
         } catch (error) {
             toast.error(error.response?.data?.message || 'Failed to send message');
