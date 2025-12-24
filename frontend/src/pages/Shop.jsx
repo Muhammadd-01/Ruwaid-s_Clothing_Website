@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Filter, X, ChevronDown, Grid, List } from 'lucide-react';
+import { Filter, X, ChevronDown } from 'lucide-react';
 import { productsAPI, brandsAPI, categoriesAPI } from '../services/api';
 import ProductCard from '../components/ui/ProductCard';
 import { ProductGridSkeleton } from '../components/ui/Skeleton';
+import { formatPrice } from '../lib/utils';
 
 const Shop = () => {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -21,15 +22,31 @@ const Shop = () => {
     const currentSort = searchParams.get('sort') || '-createdAt';
     const currentPage = parseInt(searchParams.get('page')) || 1;
     const currentSearch = searchParams.get('search') || '';
+    const currentSize = searchParams.get('size') || '';
+    const currentColor = searchParams.get('color') || '';
+    const minPrice = searchParams.get('minPrice') || '';
+    const maxPrice = searchParams.get('maxPrice') || '';
+
+    // Internal state for price inputs to avoid re-fetching on every keystroke
+    const [priceRange, setPriceRange] = useState({ min: minPrice, max: maxPrice });
+
+    useEffect(() => {
+        // Update internal price state when URL params change
+        setPriceRange({ min: minPrice, max: maxPrice });
+    }, [minPrice, maxPrice]);
 
     useEffect(() => {
         const fetchFilters = async () => {
-            const [brandsRes, categoriesRes] = await Promise.all([
-                brandsAPI.getAll(),
-                categoriesAPI.getAll(),
-            ]);
-            setBrands(brandsRes.data.data.brands);
-            setCategories(categoriesRes.data.data.categories);
+            try {
+                const [brandsRes, categoriesRes] = await Promise.all([
+                    brandsAPI.getAll(),
+                    categoriesAPI.getAll(),
+                ]);
+                setBrands(brandsRes.data.data.brands);
+                setCategories(categoriesRes.data.data.categories);
+            } catch (error) {
+                console.error('Failed to fetch filter data:', error);
+            }
         };
         fetchFilters();
     }, []);
@@ -47,6 +64,10 @@ const Shop = () => {
                 if (currentBrand) params.brand = currentBrand;
                 if (currentCategory) params.category = currentCategory;
                 if (currentSearch) params.search = currentSearch;
+                if (minPrice) params.minPrice = minPrice;
+                if (maxPrice) params.maxPrice = maxPrice;
+                if (currentSize) params.size = currentSize;
+                if (currentColor) params.color = currentColor;
 
                 const response = await productsAPI.getAll(params);
                 setProducts(response.data.data.products);
@@ -59,7 +80,7 @@ const Shop = () => {
         };
 
         fetchProducts();
-    }, [currentBrand, currentCategory, currentSort, currentPage, currentSearch]);
+    }, [currentBrand, currentCategory, currentSort, currentPage, currentSearch, minPrice, maxPrice, currentSize, currentColor]);
 
     const updateFilter = (key, value) => {
         const params = new URLSearchParams(searchParams);
@@ -74,9 +95,10 @@ const Shop = () => {
 
     const clearFilters = () => {
         setSearchParams({ page: '1' });
+        setPriceRange({ min: '', max: '' });
     };
 
-    const hasActiveFilters = currentBrand || currentCategory || currentSearch;
+    const hasActiveFilters = currentBrand || currentCategory || currentSearch || minPrice || maxPrice || currentSize || currentColor;
 
     const sortOptions = [
         { value: '-createdAt', label: 'Newest First' },
@@ -147,10 +169,10 @@ const Shop = () => {
                             <X className="w-6 h-6" />
                         </button>
 
-                        <div className="space-y-6">
+                        <div className="space-y-8">
                             {/* Active Filters */}
                             {hasActiveFilters && (
-                                <div>
+                                <div className="pb-6 border-b border-dark-300">
                                     <div className="flex items-center justify-between mb-3">
                                         <h3 className="text-white font-semibold">Active Filters</h3>
                                         <button
@@ -163,10 +185,10 @@ const Shop = () => {
                                     <div className="flex flex-wrap gap-2">
                                         {currentBrand && (
                                             <span className="badge badge-gold">
-                                                Brand: {brands.find(b => b._id === currentBrand)?.name}
+                                                {brands.find(b => b._id === currentBrand)?.name}
                                                 <button
                                                     onClick={() => updateFilter('brand', '')}
-                                                    className="ml-2"
+                                                    className="ml-2 hover:text-white"
                                                 >
                                                     <X className="w-3 h-3" />
                                                 </button>
@@ -174,10 +196,48 @@ const Shop = () => {
                                         )}
                                         {currentCategory && (
                                             <span className="badge badge-gold">
-                                                Category: {categories.find(c => c._id === currentCategory)?.name}
+                                                {categories.find(c => c._id === currentCategory)?.name}
                                                 <button
                                                     onClick={() => updateFilter('category', '')}
-                                                    className="ml-2"
+                                                    className="ml-2 hover:text-white"
+                                                >
+                                                    <X className="w-3 h-3" />
+                                                </button>
+                                            </span>
+                                        )}
+                                        {(minPrice || maxPrice) && (
+                                            <span className="badge badge-gold">
+                                                {minPrice ? formatPrice(minPrice) : '0'} - {maxPrice ? formatPrice(maxPrice) : '∞'}
+                                                <button
+                                                    onClick={() => {
+                                                        const params = new URLSearchParams(searchParams);
+                                                        params.delete('minPrice');
+                                                        params.delete('maxPrice');
+                                                        setSearchParams(params);
+                                                    }}
+                                                    className="ml-2 hover:text-white"
+                                                >
+                                                    <X className="w-3 h-3" />
+                                                </button>
+                                            </span>
+                                        )}
+                                        {currentSize && (
+                                            <span className="badge badge-gold">
+                                                Size: {currentSize}
+                                                <button
+                                                    onClick={() => updateFilter('size', '')}
+                                                    className="ml-2 hover:text-white"
+                                                >
+                                                    <X className="w-3 h-3" />
+                                                </button>
+                                            </span>
+                                        )}
+                                        {currentColor && (
+                                            <span className="badge badge-gold">
+                                                Color: {currentColor}
+                                                <button
+                                                    onClick={() => updateFilter('color', '')}
+                                                    className="ml-2 hover:text-white"
                                                 >
                                                     <X className="w-3 h-3" />
                                                 </button>
@@ -189,45 +249,145 @@ const Shop = () => {
 
                             {/* Categories */}
                             <div>
-                                <h3 className="text-white font-semibold mb-3">Categories</h3>
-                                <div className="space-y-2">
+                                <h3 className="text-white font-semibold mb-3 text-lg">Categories</h3>
+                                <div className="space-y-2 max-h-48 overflow-y-auto pr-2 scrollbar-thin">
                                     {categories.map((category) => (
-                                        <button
-                                            key={category._id}
-                                            onClick={() => updateFilter('category',
-                                                currentCategory === category._id ? '' : category._id
-                                            )}
-                                            className={`block w-full text-left px-3 py-2 rounded-lg transition-colors
-                               ${currentCategory === category._id
-                                                    ? 'bg-gold/10 text-gold'
-                                                    : 'text-gray-400 hover:bg-dark-200 hover:text-white'
-                                                }`}
-                                        >
-                                            {category.name}
-                                        </button>
+                                        <label key={category._id} className="flex items-center space-x-3 cursor-pointer group">
+                                            <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors
+                                                ${currentCategory === category._id
+                                                    ? 'bg-gold border-gold'
+                                                    : 'border-gray-600 group-hover:border-gold'}`}>
+                                                {currentCategory === category._id && <div className="w-2.5 h-2.5 bg-black rounded-sm" />}
+                                            </div>
+                                            <input
+                                                type="checkbox"
+                                                className="hidden"
+                                                checked={currentCategory === category._id}
+                                                onChange={() => updateFilter('category',
+                                                    currentCategory === category._id ? '' : category._id
+                                                )}
+                                            />
+                                            <span className={`transition-colors ${currentCategory === category._id ? 'text-white' : 'text-gray-400 group-hover:text-gold'}`}>
+                                                {category.name}
+                                            </span>
+                                        </label>
                                     ))}
                                 </div>
                             </div>
 
                             {/* Brands */}
                             <div>
-                                <h3 className="text-white font-semibold mb-3">Brands</h3>
-                                <div className="space-y-2">
+                                <h3 className="text-white font-semibold mb-3 text-lg">Brands</h3>
+                                <div className="space-y-2 max-h-48 overflow-y-auto pr-2 scrollbar-thin">
                                     {brands.map((brand) => (
+                                        <label key={brand._id} className="flex items-center space-x-3 cursor-pointer group">
+                                            <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors
+                                                ${currentBrand === brand._id
+                                                    ? 'bg-gold border-gold'
+                                                    : 'border-gray-600 group-hover:border-gold'}`}>
+                                                {currentBrand === brand._id && <div className="w-2.5 h-2.5 bg-black rounded-sm" />}
+                                            </div>
+                                            <input
+                                                type="checkbox"
+                                                className="hidden"
+                                                checked={currentBrand === brand._id}
+                                                onChange={() => updateFilter('brand',
+                                                    currentBrand === brand._id ? '' : brand._id
+                                                )}
+                                            />
+                                            <span className={`transition-colors ${currentBrand === brand._id ? 'text-white' : 'text-gray-400 group-hover:text-gold'}`}>
+                                                {brand.name}
+                                            </span>
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Sizes */}
+                            <div>
+                                <h3 className="text-white font-semibold mb-3 text-lg">Sizes</h3>
+                                <div className="flex flex-wrap gap-2">
+                                    {['XS', 'S', 'M', 'L', 'XL', 'XXL'].map((size) => (
                                         <button
-                                            key={brand._id}
-                                            onClick={() => updateFilter('brand',
-                                                currentBrand === brand._id ? '' : brand._id
-                                            )}
-                                            className={`block w-full text-left px-3 py-2 rounded-lg transition-colors
-                               ${currentBrand === brand._id
-                                                    ? 'bg-gold/10 text-gold'
-                                                    : 'text-gray-400 hover:bg-dark-200 hover:text-white'
+                                            key={size}
+                                            onClick={() => updateFilter('size', currentSize === size ? '' : size)}
+                                            className={`w-10 h-10 rounded-lg border text-sm font-medium transition-colors
+                                                ${currentSize === size
+                                                    ? 'bg-gold border-gold text-black'
+                                                    : 'border-dark-300 text-gray-400 hover:border-gold hover:text-white'
                                                 }`}
                                         >
-                                            {brand.name}
+                                            {size}
                                         </button>
                                     ))}
+                                </div>
+                            </div>
+
+                            {/* Colors */}
+                            <div>
+                                <h3 className="text-white font-semibold mb-3 text-lg">Colors</h3>
+                                <div className="flex flex-wrap gap-2">
+                                    {[
+                                        { name: 'Black', hex: '#000000' },
+                                        { name: 'White', hex: '#FFFFFF' },
+                                        { name: 'Red', hex: '#EF4444' },
+                                        { name: 'Blue', hex: '#3B82F6' },
+                                        { name: 'Green', hex: '#10B981' },
+                                        { name: 'Yellow', hex: '#F59E0B' },
+                                        { name: 'Purple', hex: '#8B5CF6' },
+                                        { name: 'Pink', hex: '#EC4899' },
+                                        { name: 'Gray', hex: '#6B7280' },
+                                    ].map((color) => (
+                                        <button
+                                            key={color.name}
+                                            onClick={() => updateFilter('color', currentColor === color.name ? '' : color.name)}
+                                            className={`w-8 h-8 rounded-full border-2 transition-transform hover:scale-110
+                                                ${currentColor === color.name
+                                                    ? 'border-gold scale-110'
+                                                    : 'border-dark-300'
+                                                }`}
+                                            style={{ backgroundColor: color.hex }}
+                                            title={color.name}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Price Range */}
+                            <div>
+                                <h3 className="text-white font-semibold mb-3 text-lg">Price Range</h3>
+                                <div className="space-y-4">
+                                    <div className="flex gap-4">
+                                        <div>
+                                            <label className="text-xs text-gray-500 mb-1 block">Min Price</label>
+                                            <input
+                                                type="number"
+                                                placeholder="Min"
+                                                value={priceRange.min}
+                                                onChange={(e) => setPriceRange({ ...priceRange, min: e.target.value })}
+                                                className="input-field py-1 px-2 text-sm"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-gray-500 mb-1 block">Max Price</label>
+                                            <input
+                                                type="number"
+                                                placeholder="Max"
+                                                value={priceRange.max}
+                                                onChange={(e) => setPriceRange({ ...priceRange, max: e.target.value })}
+                                                className="input-field py-1 px-2 text-sm"
+                                            />
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            updateFilter('minPrice', priceRange.min);
+                                            updateFilter('maxPrice', priceRange.max);
+                                        }}
+                                        className="btn-secondary w-full py-2 text-sm"
+                                    >
+                                        Apply Price
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -273,8 +433,8 @@ const Shop = () => {
                                 )}
                             </>
                         ) : (
-                            <div className="text-center py-16">
-                                <p className="text-gray-400 text-lg mb-4">No products found</p>
+                            <div className="text-center py-16 bg-dark-100/50 rounded-xl border border-dark-300 border-dashed">
+                                <p className="text-gray-400 text-lg mb-4">No products match your filters</p>
                                 <button onClick={clearFilters} className="btn-secondary">
                                     Clear Filters
                                 </button>

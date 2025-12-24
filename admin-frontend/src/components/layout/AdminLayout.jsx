@@ -3,7 +3,7 @@ import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
     LayoutDashboard, Package, Tag, Layers, ShoppingCart,
-    Users, Menu, LogOut, ChevronLeft
+    Users, Menu, LogOut, ChevronLeft, User
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -19,6 +19,7 @@ const AdminLayout = () => {
         { name: 'Categories', path: '/categories', icon: Layers },
         { name: 'Orders', path: '/orders', icon: ShoppingCart },
         { name: 'Users', path: '/users', icon: Users },
+        { name: 'Profile', path: '/profile', icon: User },
     ];
 
     const handleLogout = () => {

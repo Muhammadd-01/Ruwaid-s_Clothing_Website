@@ -1,213 +1,223 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-    DollarSign, Package, Users, ShoppingCart,
-    TrendingUp, AlertTriangle, ArrowRight
+    Users, ShoppingBag, DollarSign, Package,
+    TrendingUp, ArrowUpRight, ArrowDownRight, Clock
 } from 'lucide-react';
+import {
+    AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+    BarChart, Bar
+} from 'recharts';
 import { adminAPI } from '../services/api';
 import { formatPrice } from '../lib/utils';
 import { PageLoader } from '../components/ui/LoadingSpinner';
+import toast from 'react-hot-toast';
 
 const Dashboard = () => {
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [initialData, setInitialData] = useState({
+        monthlyRevenue: [],
+        ordersByStatus: []
+    });
 
     useEffect(() => {
-        const fetchDashboard = async () => {
+        const fetchDashboardData = async () => {
             try {
                 const response = await adminAPI.getDashboard();
-                setStats(response.data.data);
+                const { stats, recentOrders, ordersByStatus, monthlyRevenue, topProducts } = response.data.data;
+                setStats({
+                    ...stats,
+                    recentOrders,
+                    topProducts
+                });
+                setInitialData({
+                    monthlyRevenue: monthlyRevenue.map(item => ({
+                        ...item,
+                        month: `${item._id.month}/${item._id.year}`
+                    })),
+                    ordersByStatus
+                });
             } catch (error) {
-                console.error('Failed to fetch dashboard:', error);
+                console.error(error);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchDashboard();
+        fetchDashboardData();
     }, []);
+
+    const handleExport = async (type) => {
+        try {
+            const loadingToast = toast.loading(`Generating ${type} report...`);
+            const response = await adminAPI.exportData(type);
+
+            // Create blob link to download
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `${type}-report-${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            link.parentNode.removeChild(link);
+
+            toast.dismiss(loadingToast);
+            toast.success('Report downloaded');
+        } catch (error) {
+            console.error(error);
+            toast.error('Failed to generate report');
+        }
+    };
 
     if (loading) return <PageLoader />;
 
-    const statCards = [
-        {
-            title: 'Total Revenue',
-            value: formatPrice(stats?.totalRevenue || 0),
-            icon: DollarSign,
-            color: 'bg-green-500/10 text-green-500',
-            link: '/orders',
-        },
-        {
-            title: 'Total Orders',
-            value: stats?.totalOrders || 0,
-            icon: ShoppingCart,
-            color: 'bg-blue-500/10 text-blue-500',
-            link: '/orders',
-        },
-        {
-            title: 'Total Products',
-            value: stats?.totalProducts || 0,
-            icon: Package,
-            color: 'bg-purple-500/10 text-purple-500',
-            link: '/products',
-        },
-        {
-            title: 'Total Users',
-            value: stats?.totalUsers || 0,
-            icon: Users,
-            color: 'bg-gold/10 text-gold',
-            link: '/users',
-        },
-    ];
-
     return (
-        <div className="space-y-8">
-            <div>
-                <h1 className="text-2xl font-display font-bold text-white">Dashboard</h1>
-                <p className="text-gray-400">Overview of your store performance</p>
+        <div className="space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl font-display font-bold text-white">Dashboard</h1>
+                    <p className="text-gray-400">Welcome back, Admin</p>
+                </div>
+                <div className="flex gap-3">
+                    <button onClick={() => handleExport('products')} className="btn-secondary">
+                        Product Report
+                    </button>
+                    <button onClick={() => handleExport('orders')} className="btn-secondary">
+                        Sales Report
+                    </button>
+                </div>
             </div>
 
-            {/* Stat Cards */}
+            {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {statCards.map((stat, index) => (
+                {[
+                    { label: 'Total Revenue', value: formatPrice(stats?.totalRevenue || 0), icon: DollarSign, color: 'text-green-400', bg: 'bg-green-400/10' },
+                    { label: 'Total Orders', value: stats?.totalOrders || 0, icon: ShoppingBag, color: 'text-blue-400', bg: 'bg-blue-400/10' },
+                    { label: 'Total Users', value: stats?.totalUsers || 0, icon: Users, color: 'text-purple-400', bg: 'bg-purple-400/10' },
+                    { label: 'Total Products', value: stats?.totalProducts || 0, icon: Package, color: 'text-gold', bg: 'bg-gold/10' },
+                ].map((stat, index) => (
                     <motion.div
-                        key={stat.title}
+                        key={index}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1 }}
+                        className="bg-dark-100 border border-dark-300 p-6 rounded-xl hover:border-gold/50 transition-colors"
                     >
-                        <Link
-                            to={stat.link}
-                            className="block bg-dark-100 border border-dark-300 rounded-xl p-6
-                       hover:border-gold/30 transition-colors group"
-                        >
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-gray-400 text-sm">{stat.title}</p>
-                                    <p className="text-2xl font-bold text-white mt-1">{stat.value}</p>
-                                </div>
-                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${stat.color}`}>
-                                    <stat.icon className="w-6 h-6" />
-                                </div>
+                        <div className="flex items-center justify-between mb-4">
+                            <div className={`p-3 rounded-lg ${stat.bg}`}>
+                                <stat.icon className={`w-6 h-6 ${stat.color}`} />
                             </div>
-                        </Link>
+                            {index === 0 && <span className="text-xs text-green-400 font-medium">+12.5%</span>}
+                        </div>
+                        <h3 className="text-gray-400 text-sm font-medium">{stat.label}</h3>
+                        <p className="text-2xl font-bold text-white mt-1">{stat.value}</p>
                     </motion.div>
                 ))}
             </div>
 
+            {/* Charts Section */}
+            <div className="grid lg:grid-cols-2 gap-6">
+                {/* Revenue Chart */}
+                <div className="bg-dark-100 border border-dark-300 p-6 rounded-xl">
+                    <h3 className="text-lg font-bold text-white mb-6">Revenue Analytics</h3>
+                    <div className="h-80">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={initialData.monthlyRevenue}>
+                                <defs>
+                                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#D4AF37" stopOpacity={0.3} />
+                                        <stop offset="95%" stopColor="#D4AF37" stopOpacity={0} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+                                <XAxis dataKey="_id.month" stroke="#666" />
+                                <YAxis stroke="#666" />
+                                <Tooltip
+                                    contentStyle={{ backgroundColor: '#1A1A1A', borderColor: '#333' }}
+                                    itemStyle={{ color: '#fff' }}
+                                />
+                                <Area type="monotone" dataKey="revenue" stroke="#D4AF37" fillOpacity={1} fill="url(#colorRevenue)" />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+
+                {/* Orders by Status */}
+                <div className="bg-dark-100 border border-dark-300 p-6 rounded-xl">
+                    <h3 className="text-lg font-bold text-white mb-6">Order Status</h3>
+                    <div className="h-80">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={initialData.ordersByStatus}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+                                <XAxis dataKey="_id" stroke="#666" />
+                                <YAxis stroke="#666" />
+                                <Tooltip
+                                    contentStyle={{ backgroundColor: '#1A1A1A', borderColor: '#333' }}
+                                    itemStyle={{ color: '#fff' }}
+                                />
+                                <Bar dataKey="count" fill="#D4AF37" radius={[4, 4, 0, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+            </div>
+
+            {/* Bottom Section: Recent Orders & Top Products */}
             <div className="grid lg:grid-cols-2 gap-6">
                 {/* Recent Orders */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 }}
-                    className="bg-dark-100 border border-dark-300 rounded-xl p-6"
-                >
-                    <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-lg font-semibold text-white">Recent Orders</h2>
-                        <Link to="/orders" className="text-gold text-sm hover:underline flex items-center gap-1">
-                            View All <ArrowRight className="w-4 h-4" />
-                        </Link>
-                    </div>
-
-                    <div className="space-y-3">
-                        {stats?.recentOrders?.slice(0, 5).map((order) => (
-                            <div key={order._id} className="flex items-center justify-between p-3 bg-dark-200 rounded-lg">
+                <div className="bg-dark-100 border border-dark-300 rounded-xl p-6">
+                    <h3 className="text-lg font-bold text-white mb-6">Recent Orders</h3>
+                    <div className="space-y-4">
+                        {stats?.recentOrders?.map((order) => (
+                            <div key={order._id} className="flex items-center justify-between p-4 bg-dark-200 rounded-lg">
                                 <div>
                                     <p className="text-white font-medium">{order.orderNumber}</p>
-                                    <p className="text-gray-400 text-sm">{order.user?.name}</p>
+                                    <p className="text-sm text-gray-400">{order.user?.name || 'Guest'}</p>
                                 </div>
                                 <div className="text-right">
                                     <p className="text-gold font-medium">{formatPrice(order.total)}</p>
-                                    <span className={`badge ${order.status === 'delivered' ? 'badge-success' :
-                                        order.status === 'cancelled' ? 'badge-danger' : 'badge-warning'
+                                    <span className={`text-xs px-2 py-1 rounded-full ${order.status === 'delivered' ? 'bg-green-500/10 text-green-400' :
+                                            order.status === 'pending' ? 'bg-yellow-500/10 text-yellow-400' :
+                                                'bg-blue-500/10 text-blue-400'
                                         }`}>
                                         {order.status}
                                     </span>
                                 </div>
                             </div>
-                        )) || (
-                                <p className="text-gray-500 text-center py-4">No recent orders</p>
-                            )}
+                        ))}
                     </div>
-                </motion.div>
+                </div>
 
-                {/* Low Stock Alert */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5 }}
-                    className="bg-dark-100 border border-dark-300 rounded-xl p-6"
-                >
-                    <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                            <AlertTriangle className="w-5 h-5 text-yellow-500" />
-                            Low Stock Alert
-                        </h2>
-                        <Link to="/products" className="text-gold text-sm hover:underline flex items-center gap-1">
-                            View All <ArrowRight className="w-4 h-4" />
-                        </Link>
-                    </div>
-
-                    <div className="space-y-3">
-                        {stats?.lowStockProducts?.slice(0, 5).map((product) => (
-                            <div key={product._id} className="flex items-center justify-between p-3 bg-dark-200 rounded-lg">
-                                <div className="flex items-center gap-3">
+                {/* Top Products */}
+                <div className="bg-dark-100 border border-dark-300 rounded-xl p-6">
+                    <h3 className="text-lg font-bold text-white mb-6">Top Selling Products</h3>
+                    <div className="space-y-4">
+                        {stats?.topProducts?.map((item) => (
+                            <div key={item._id} className="flex items-center justify-between p-4 bg-dark-200 rounded-lg">
+                                <div className="flex items-center gap-4">
                                     <img
-                                        src={product.images?.[0] || 'https://via.placeholder.com/40'}
-                                        alt={product.name}
-                                        className="w-10 h-10 rounded-lg object-cover"
+                                        src={item.images?.[0]?.startsWith('http')
+                                            ? item.images[0]
+                                            : `${import.meta.env.VITE_API_URL}${item.images?.[0] || ''}` || 'https://via.placeholder.com/48'}
+                                        alt={item.name}
+                                        className="w-12 h-12 rounded-lg object-cover"
+                                        onError={(e) => { e.target.src = 'https://via.placeholder.com/48'; }}
                                     />
                                     <div>
-                                        <p className="text-white font-medium text-sm">{product.name}</p>
-                                        <p className="text-gray-400 text-xs">{product.brand?.name}</p>
+                                        <p className="text-white font-medium">{item.name}</p>
+                                        <p className="text-sm text-gray-400">{formatPrice(item.price)}</p>
                                     </div>
                                 </div>
-                                <span className="badge badge-danger">
-                                    {product.stock} left
-                                </span>
+                                <div className="text-right">
+                                    <p className="text-lg font-bold text-white">{item.totalSold}</p>
+                                    <p className="text-xs text-gray-400">Sold</p>
+                                </div>
                             </div>
-                        )) || (
-                                <p className="text-gray-500 text-center py-4">No low stock items</p>
-                            )}
+                        ))}
                     </div>
-                </motion.div>
+                </div>
             </div>
-
-            {/* Top Products */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 }}
-                className="bg-dark-100 border border-dark-300 rounded-xl p-6"
-            >
-                <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                        <TrendingUp className="w-5 h-5 text-gold" />
-                        Top Selling Products
-                    </h2>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                    {stats?.topProducts?.map((product, index) => (
-                        <div key={product._id} className="p-4 bg-dark-200 rounded-xl text-center">
-                            <div className="w-8 h-8 bg-gold/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                                <span className="text-gold font-bold">#{index + 1}</span>
-                            </div>
-                            <img
-                                src={product.images?.[0] || 'https://via.placeholder.com/80'}
-                                alt={product.name}
-                                className="w-16 h-16 rounded-lg object-cover mx-auto mb-2"
-                            />
-                            <p className="text-white font-medium text-sm line-clamp-1">{product.name}</p>
-                            <p className="text-gray-400 text-xs">{product.totalSold} sold</p>
-                        </div>
-                    )) || (
-                            <p className="text-gray-500 col-span-full text-center py-4">No sales data yet</p>
-                        )}
-                </div>
-            </motion.div>
         </div>
     );
 };

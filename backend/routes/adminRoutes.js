@@ -8,7 +8,9 @@ import {
     getUserCart,
     createAdmin,
     getLogs,
-    exportData
+    exportData,
+    deleteOrder,
+    updateAdminProfile
 } from '../controllers/adminController.js';
 import { protect, authorize } from '../middleware/auth.js';
 
@@ -25,6 +27,12 @@ router.get('/users', getUsers);
 router.get('/users/:id', getUser);
 router.get('/users/:id/cart', getUserCart);
 router.delete('/users/:id', deleteUser);
+
+// Admin profile
+router.put('/profile', updateAdminProfile);
+
+// Orders
+router.delete('/orders/:id', deleteOrder);
 
 // Super admin only
 router.get('/logs', authorize('superadmin'), getLogs);

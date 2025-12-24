@@ -79,9 +79,35 @@ const Products = () => {
         setShowModal(true);
     };
 
-    const handleDelete = async (id) => {
-        if (!window.confirm('Are you sure you want to delete this product?')) return;
+    const handleDelete = (id) => {
+        toast.custom((t) => (
+            <div className="bg-dark-100 border border-dark-300 p-6 rounded-xl shadow-2xl max-w-sm w-full">
+                <h3 className="text-white font-semibold mb-2">Delete Product?</h3>
+                <p className="text-gray-400 text-sm mb-6">
+                    Are you sure you want to delete this product? This will remove it permanently.
+                </p>
+                <div className="flex gap-3 justify-end">
+                    <button
+                        onClick={() => toast.dismiss(t.id)}
+                        className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={() => {
+                            toast.dismiss(t.id);
+                            confirmDelete(id);
+                        }}
+                        className="px-4 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                    >
+                        Delete
+                    </button>
+                </div>
+            </div>
+        ), { duration: 5000 });
+    };
 
+    const confirmDelete = async (id) => {
         try {
             await productsAPI.delete(id);
             toast.success('Product deleted');
@@ -362,7 +388,7 @@ const Products = () => {
                                         {formData.images.split('\n').filter(Boolean).map((url, index) => (
                                             <div key={index} className="relative group w-24 h-24">
                                                 <img
-                                                    src={`${import.meta.env.VITE_API_URL}${url}`}
+                                                    src={url.startsWith('http') ? url : `${import.meta.env.VITE_API_URL}${url}`}
                                                     alt={`Product ${index + 1}`}
                                                     className="w-full h-full object-cover rounded-lg border border-dark-300"
                                                     onError={(e) => { e.target.src = url; }} // Fallback for external URLs if any
@@ -372,4 +398,85 @@ const Products = () => {
                                                     onClick={() => {
                                                         const newImages = formData.images.split('\n').filter((_, i) => i !== index).join('\n');
                                                         setFormData({ ...formData, images: newImages });
-            
+                                                    }}
+                                                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 
+                                                             opacity-0 group-hover:opacity-100 transition-opacity"
+                                                >
+                                                    <Trash2 className="w-3 h-3" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <div className="flex items-center justify-center w-full">
+                                        <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dark-300 border-dashed rounded-lg cursor-pointer hover:bg-dark-200 transition-colors">
+                                            <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                                                <Plus className="w-8 h-8 text-gray-400 mb-2" />
+                                                <p className="text-sm text-gray-400">
+                                                    <span className="font-semibold">Click to upload</span> or drag and drop
+                                                </p>
+                                                <p className="text-xs text-gray-500">SVG, PNG, JPG or GIF (MAX. 5MB)</p>
+                                            </div>
+                                            <input
+                                                type="file"
+                                                className="hidden"
+                                                multiple
+                                                accept="image/*"
+                                                onChange={async (e) => {
+                                                    const files = Array.from(e.target.files);
+                                                    if (files.length === 0) return;
+
+                                                    const uploadFormData = new FormData();
+                                                    files.forEach(file => {
+                                                        uploadFormData.append('images', file);
+                                                    });
+
+                                                    try {
+                                                        const loadingToast = toast.loading('Uploading images...');
+                                                        const response = await uploadAPI.uploadMultiple(uploadFormData);
+                                                        toast.dismiss(loadingToast);
+                                                        toast.success('Images uploaded');
+
+                                                        const newPaths = response.data.data.paths.join('\n');
+                                                        setFormData(prev => ({
+                                                            ...prev,
+                                                            images: prev.images ? `${prev.images}\n${newPaths}` : newPaths
+                                                        }));
+                                                    } catch (error) {
+                                                        toast.error('Upload failed');
+                                                        console.error(error);
+                                                    }
+                                                }}
+                                            />
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <label className="flex items-center text-gray-400">
+                                <input
+                                    type="checkbox"
+                                    checked={formData.featured}
+                                    onChange={(e) => setFormData({ ...formData, featured: e.target.checked })}
+                                    className="mr-2"
+                                />
+                                Featured Product
+                            </label>
+
+                            <div className="flex gap-3 pt-4">
+                                <button type="submit" className="btn-primary">
+                                    {editProduct ? 'Update Product' : 'Create Product'}
+                                </button>
+                                <button type="button" onClick={() => setShowModal(false)} className="btn-dark">
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </motion.div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+export default Products;

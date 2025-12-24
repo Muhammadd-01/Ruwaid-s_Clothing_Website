@@ -49,10 +49,12 @@ export const adminAPI = {
     getDashboard: () => api.get('/admin/dashboard'),
     getUsers: (params) => api.get('/admin/users', { params }),
     getUser: (id) => api.get(`/admin/users/${id}`),
-    updateUserRole: (id, role) => api.put(`/admin/users/${id}/role`, { role }),
-    deleteUser: (id) => api.delete(`/admin/users/${id}`),
+    updateUserRole: (userId, role) => api.put(`/admin/users/${userId}/role`, { role }),
+    deleteUser: (userId) => api.delete(`/admin/users/${userId}`),
     getUserCart: (id) => api.get(`/admin/users/${id}/cart`),
     createAdmin: (data) => api.post('/admin/users/create-admin', data),
+    deleteOrder: (orderId) => api.delete(`/admin/orders/${orderId}`),
+    updateProfile: (data) => api.put('/admin/profile', data),
 };
 
 export const productsAPI = {
@@ -83,6 +85,19 @@ export const ordersAPI = {
     getAllAdmin: (params) => api.get('/orders/admin/all', { params }),
     getOne: (id) => api.get(`/orders/${id}`),
     updateStatus: (id, status) => api.put(`/orders/${id}/status`, { status }),
+};
+
+export const uploadAPI = {
+    upload: (formData) => api.post('/upload', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    }),
+    uploadMultiple: (formData) => api.post('/upload/multiple', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    }),
 };
 
 export default api;

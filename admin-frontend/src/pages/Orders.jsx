@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Eye } from 'lucide-react';
-import { ordersAPI } from '../services/api';
+import { Eye, Trash2 } from 'lucide-react';
+import { ordersAPI, adminAPI } from '../services/api';
 import { formatPrice, formatDate } from '../lib/utils';
 import { PageLoader } from '../components/ui/LoadingSpinner';
 import toast from 'react-hot-toast';
@@ -44,6 +44,47 @@ const Orders = () => {
             }
         } catch (error) {
             toast.error(error.response?.data?.message || 'Failed to update status');
+        }
+    };
+
+    const handleDelete = (orderId, orderNumber) => {
+        toast.custom((t) => (
+            <div className="bg-dark-100 border border-dark-300 p-6 rounded-xl shadow-2xl max-w-sm w-full">
+                <h3 className="text-white font-semibold mb-2">Delete Order?</h3>
+                <p className="text-gray-400 text-sm mb-6">
+                    Are you sure you want to delete order {orderNumber}? This action cannot be undone.
+                </p>
+                <div className="flex gap-3 justify-end">
+                    <button
+                        onClick={() => toast.dismiss(t.id)}
+                        className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={() => {
+                            toast.dismiss(t.id);
+                            confirmDelete(orderId);
+                        }}
+                        className="px-4 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                    >
+                        Delete
+                    </button>
+                </div>
+            </div>
+        ), { duration: 5000 });
+    };
+
+    const confirmDelete = async (orderId) => {
+        try {
+            await adminAPI.deleteOrder(orderId);
+            toast.success('Order deleted successfully');
+            fetchOrders();
+            if (selectedOrder?._id === orderId) {
+                setSelectedOrder(null);
+            }
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to delete order');
         }
     };
 
@@ -129,12 +170,20 @@ const Orders = () => {
                                         </td>
                                         <td className="p-4 text-gray-400 text-sm">{formatDate(order.createdAt)}</td>
                                         <td className="p-4">
-                                            <button
-                                                onClick={() => setSelectedOrder(order)}
-                                                className="p-2 text-gray-400 hover:text-gold hover:bg-dark-300 rounded-lg"
-                                            >
-                                                <Eye className="w-4 h-4" />
-                                            </button>
+                                            <div className="flex items-center justify-end gap-2">
+                                                <button
+                                                    onClick={() => setSelectedOrder(order)}
+                                                    className="p-2 text-gray-400 hover:text-gold hover:bg-dark-300 rounded-lg"
+                                                >
+                                                    <Eye className="w-4 h-4" />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(order._id, order.orderNumber)}
+                                                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-dark-300 rounded-lg"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}

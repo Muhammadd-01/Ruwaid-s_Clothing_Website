@@ -49,9 +49,35 @@ const Users = () => {
         }
     };
 
-    const handleDelete = async (userId) => {
-        if (!window.confirm('Are you sure you want to delete this user?')) return;
+    const handleDelete = (userId) => {
+        toast.custom((t) => (
+            <div className="bg-dark-100 border border-dark-300 p-6 rounded-xl shadow-2xl max-w-sm w-full">
+                <h3 className="text-white font-semibold mb-2">Delete User?</h3>
+                <p className="text-gray-400 text-sm mb-6">
+                    Are you sure you want to delete this user? This action cannot be undone.
+                </p>
+                <div className="flex gap-3 justify-end">
+                    <button
+                        onClick={() => toast.dismiss(t.id)}
+                        className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={() => {
+                            toast.dismiss(t.id);
+                            confirmDelete(userId);
+                        }}
+                        className="px-4 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                    >
+                        Delete
+                    </button>
+                </div>
+            </div>
+        ), { duration: 5000 });
+    };
 
+    const confirmDelete = async (userId) => {
         try {
             await adminAPI.deleteUser(userId);
             toast.success('User deleted');
@@ -140,7 +166,11 @@ const Users = () => {
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 bg-dark-200 rounded-full flex items-center justify-center border border-dark-300">
                                                     {user.profileImage ? (
-                                                        <img src={user.profileImage} alt={user.name} className="w-full h-full rounded-full object-cover" />
+                                                        <img
+                                                            src={user.profileImage.startsWith('http') ? user.profileImage : `${import.meta.env.VITE_API_URL}${user.profileImage}`}
+                                                            alt={user.name}
+                                                            className="w-full h-full rounded-full object-cover"
+                                                        />
                                                     ) : (
                                                         <span className="text-gold font-medium">{user.name[0]}</span>
                                                     )}

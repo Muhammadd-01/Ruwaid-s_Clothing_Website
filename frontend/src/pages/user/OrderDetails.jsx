@@ -27,9 +27,35 @@ const OrderDetails = () => {
         fetchOrder();
     }, [id]);
 
-    const handleCancelOrder = async () => {
-        if (!window.confirm('Are you sure you want to cancel this order?')) return;
+    const handleCancelOrder = () => {
+        toast.custom((t) => (
+            <div className="bg-dark-100 border border-dark-300 p-6 rounded-xl shadow-2xl max-w-sm w-full">
+                <h3 className="text-white font-semibold mb-2">Cancel Order?</h3>
+                <p className="text-gray-400 text-sm mb-6">
+                    Are you sure you want to cancel this order? This action cannot be undone.
+                </p>
+                <div className="flex gap-3 justify-end">
+                    <button
+                        onClick={() => toast.dismiss(t.id)}
+                        className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
+                    >
+                        Keep Order
+                    </button>
+                    <button
+                        onClick={() => {
+                            toast.dismiss(t.id);
+                            confirmCancelOrder();
+                        }}
+                        className="px-4 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                    >
+                        Yes, Cancel
+                    </button>
+                </div>
+            </div>
+        ), { duration: 5000 });
+    };
 
+    const confirmCancelOrder = async () => {
         try {
             const response = await ordersAPI.cancel(id);
             if (response.data.success) {

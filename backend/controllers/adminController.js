@@ -415,3 +415,87 @@ export const exportData = async (req, res, next) => {
         next(error);
     }
 };
+
+// @desc    Delete order
+// @route   DELETE /api/admin/orders/:id
+// @access  Private/Admin
+export const deleteOrder = async (req, res, next) => {
+    try {
+        const orderId = req.params.id;
+        const order = await Order.findById(orderId);
+
+        if (!order) {
+            return res.status(404).json({
+                success: false,
+                message: 'Order not found'
+            });
+        }
+
+        // Delete the order
+        await order.deleteOne();
+
+        await logAction(req, 'delete_order', 'Order', orderId, { orderNumber: order.orderNumber });
+
+        res.status(200).json({
+            success: true,
+            message: 'Order deleted successfully'
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// @desc    Update admin profile
+// @route   PUT /api/admin/profile
+// @access  Private/Admin
+export const updateAdminProfile = async (req, res, next) => {
+    try {
+        const { name, email, profileImage } = req.body;
+        const userId = req.user.id;
+
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        // Update fields
+        if (name) user.name = name;
+        if (email) {
+            // Check if email is already taken
+            const existingUser = await User.findOne({ email, _id: { $ne: userId } });
+            if (existingUser) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Email already in use'
+                });
+            }
+            user.email = email;
+        }
+        if (profileImage) user.profileImage = profileImage;
+
+        await user.save();
+
+        await logAction(req, 'update_profile', 'User', userId, { name, email });
+
+        res.status(200).json({
+            success: true,
+            message: 'Profile updated successfully',
+            data: {
+                user: {
+                    _id: user._id,
+                    name: user.name,
+                    email: user.email,
+                    role: user.role,
+                    profileImage: user.profileImage
+                }
+            }
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+

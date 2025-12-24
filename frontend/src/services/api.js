@@ -120,4 +120,18 @@ export const adminAPI = {
     createAdmin: (data) => api.post('/admin/users/create-admin', data),
 };
 
+// Upload API
+export const uploadAPI = {
+    upload: (formData) => api.post('/upload', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    }),
+    uploadMultiple: (formData) => api.post('/upload/multiple', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    }),
+};
+
 export default api;

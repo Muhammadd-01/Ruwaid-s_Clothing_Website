@@ -44,7 +44,9 @@ const ProductCard = ({ product, index = 0 }) => {
                     {/* Image Container */}
                     <div className="product-image aspect-product">
                         <img
-                            src={product.images?.[0] || 'https://via.placeholder.com/400x500'}
+                            src={product.images?.[0]?.startsWith('http')
+                                ? product.images[0]
+                                : `${import.meta.env.VITE_API_URL}${product.images?.[0]}` || 'https://via.placeholder.com/400x500'}
                             alt={product.name}
                             className="w-full h-full object-cover"
                         />

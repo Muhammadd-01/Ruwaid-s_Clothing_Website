@@ -43,9 +43,35 @@ const Brands = () => {
         setShowModal(true);
     };
 
-    const handleDelete = async (id) => {
-        if (!window.confirm('Are you sure you want to delete this brand?')) return;
+    const handleDelete = (id) => {
+        toast.custom((t) => (
+            <div className="bg-dark-100 border border-dark-300 p-6 rounded-xl shadow-2xl max-w-sm w-full">
+                <h3 className="text-white font-semibold mb-2">Delete Brand?</h3>
+                <p className="text-gray-400 text-sm mb-6">
+                    Are you sure you want to delete this brand? All associated products will be affected.
+                </p>
+                <div className="flex gap-3 justify-end">
+                    <button
+                        onClick={() => toast.dismiss(t.id)}
+                        className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={() => {
+                            toast.dismiss(t.id);
+                            confirmDelete(id);
+                        }}
+                        className="px-4 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                    >
+                        Delete
+                    </button>
+                </div>
+            </div>
+        ), { duration: 5000 });
+    };
 
+    const confirmDelete = async (id) => {
         try {
             await brandsAPI.delete(id);
             toast.success('Brand deleted');

@@ -5,7 +5,7 @@ import {
     Edit2, Check, X, Camera
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { userAPI } from '../../services/api';
+import { userAPI, uploadAPI } from '../../services/api';
 import toast from 'react-hot-toast';
 
 const Profile = () => {
@@ -128,7 +128,9 @@ const Profile = () => {
                                     <div className="w-24 h-24 rounded-full bg-dark-200 border-2 border-dark-300 overflow-hidden">
                                         {formData.profileImage ? (
                                             <img
-                                                src={formData.profileImage}
+                                                src={formData.profileImage.startsWith('http')
+                                                    ? formData.profileImage
+                                                    : `${import.meta.env.VITE_API_URL}${formData.profileImage}`}
                                                 alt={formData.name}
                                                 className="w-full h-full object-cover"
                                             />
@@ -138,18 +140,46 @@ const Profile = () => {
                                             </div>
                                         )}
                                     </div>
+                                    <label className="absolute bottom-0 right-0 bg-gold text-black p-1.5 rounded-full cursor-pointer hover:bg-yellow-500 transition-colors shadow-lg">
+                                        <Camera className="w-4 h-4" />
+                                        <input
+                                            type="file"
+                                            className="hidden"
+                                            accept="image/*"
+                                            onChange={async (e) => {
+                                                const file = e.target.files[0];
+                                                if (!file) return;
+
+                                                const uploadFormData = new FormData();
+                                                uploadFormData.append('image', file);
+
+                                                try {
+                                                    const loadingToast = toast.loading('Uploading image...');
+                                                    const response = await uploadAPI.upload(uploadFormData);
+
+                                                    // Construct full URL if response is relative
+                                                    const imagePath = response.data.data.path;
+                                                    const fullUrl = imagePath.startsWith('http')
+                                                        ? imagePath
+                                                        : `${import.meta.env.VITE_API_URL}${imagePath}`;
+
+                                                    setFormData({ ...formData, profileImage: fullUrl });
+                                                    toast.dismiss(loadingToast);
+                                                    toast.success('Image uploaded');
+                                                } catch (error) {
+                                                    toast.error('Failed to upload image');
+                                                    console.error(error);
+                                                }
+                                            }}
+                                        />
+                                    </label>
                                 </div>
                                 <div className="flex-grow">
-                                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                                        Profile Image URL
-                                    </label>
-                                    <input
-                                        type="url"
-                                        value={formData.profileImage}
-                                        onChange={(e) => setFormData({ ...formData, profileImage: e.target.value })}
-                                        placeholder="https://example.com/image.jpg"
-                                        className="input-field"
-                                    />
+                                    <h3 className="text-white font-medium mb-1">Profile Photo</h3>
+                                    <p className="text-gray-400 text-sm">
+                                        Click the camera icon to upload a new profile photo.
+                                        Supports JPG, PNG or WEBP (max 5MB).
+                                    </p>
                                 </div>
                             </div>
 

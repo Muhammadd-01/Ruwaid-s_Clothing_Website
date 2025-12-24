@@ -10,6 +10,7 @@ import Brands from './pages/Brands';
 import Categories from './pages/Categories';
 import Orders from './pages/Orders';
 import Users from './pages/Users';
+import Profile from './pages/Profile';
 
 function App() {
     return (
@@ -30,6 +31,7 @@ function App() {
                         <Route path="categories" element={<Categories />} />
                         <Route path="orders" element={<Orders />} />
                         <Route path="users" element={<Users />} />
+                        <Route path="profile" element={<Profile />} />
                     </Route>
 
                     <Route path="*" element={<Navigate to="/dashboard" replace />} />
