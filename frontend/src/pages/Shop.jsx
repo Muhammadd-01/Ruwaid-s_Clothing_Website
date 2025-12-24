@@ -15,6 +15,13 @@ const Shop = () => {
     const [pagination, setPagination] = useState({});
     const [loading, setLoading] = useState(true);
     const [showFilters, setShowFilters] = useState(false);
+    const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
+
+    useEffect(() => {
+        const handleResize = () => setIsDesktop(window.innerWidth >= 1024);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     // Get current filters from URL
     const currentBrand = searchParams.get('brand') || '';
@@ -152,11 +159,12 @@ const Shop = () => {
                     {/* Filters Sidebar */}
                     <motion.aside
                         initial={false}
-                        animate={{
+                        animate={isDesktop ? { x: 0, opacity: 1 } : {
                             x: showFilters ? 0 : -320,
                             opacity: showFilters ? 1 : 0
                         }}
-                        className={`fixed lg:relative lg:block lg:opacity-100 lg:translate-x-0
+                        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                        className={`fixed lg:static lg:block
                        top-0 left-0 h-full lg:h-auto w-72 bg-dark-100 lg:bg-transparent
                        border-r lg:border-0 border-dark-300 z-40 p-6 lg:p-0
                        ${showFilters ? 'block' : 'hidden lg:block'}`}
@@ -441,6 +449,49 @@ const Shop = () => {
                             </div>
                         )}
                     </div>
+                </div>
+
+                {/* Additional Content - Style Guide & Collections */}
+                <div className="mt-24 space-y-24">
+                    {/* Style Guide Section */}
+                    <section className="bg-dark-100 rounded-3xl p-8 md:p-12 border border-dark-300 overflow-hidden relative">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-gold/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
+                        <div className="relative z-10 grid lg:grid-cols-2 gap-12 items-center">
+                            <div>
+                                <span className="text-gold font-medium mb-4 block">Fashion Guide</span>
+                                <h2 className="text-3xl md:text-4xl font-display font-bold text-white mb-6">
+                                    How to Style Your <br />
+                                    <span className="gradient-text">Premium Collections</span>
+                                </h2>
+                                <div className="space-y-4 text-gray-400 text-lg">
+                                    <p>
+                                        Whether you're dressing for a formal event or a casual day out,
+                                        our multi-brand collection offers endless possibilities.
+                                    </p>
+                                    <ul className="space-y-2 list-disc list-inside">
+                                        <li>Combine traditional lawn with modern accessories for a fusion look.</li>
+                                        <li>Layer your winter wear with premium shawls from Gul Ahmed.</li>
+                                        <li>Day-to-night transitions with versatile pieces from Khaadi.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <img src="https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=400" alt="Style 1" className="rounded-xl aspect-[3/4] object-cover" />
+                                <img src="https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=400" alt="Style 2" className="rounded-xl aspect-[3/4] object-cover mt-8" />
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Quality Commitment Section */}
+                    <section className="text-center max-w-3xl mx-auto">
+                        <h2 className="text-2xl font-display font-bold text-white mb-6">Our Quality Commitment</h2>
+                        <p className="text-gray-400 leading-relaxed">
+                            Every item in our shop is sourced directly from the brands' authorized distributors.
+                            We guarantee the authenticity of every piece, from the intricate embroidery of J.
+                            to the premium fabrics of Alkaram. If you're not satisfied with the quality,
+                            our easy return policy has you covered.
+                        </p>
+                    </section>
                 </div>
             </div>
         </div>

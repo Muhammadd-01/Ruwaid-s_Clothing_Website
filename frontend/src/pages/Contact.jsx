@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Phone, MapPin, Clock, Send } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { contactAPI } from '../services/api';
 
 const Contact = () => {
     const [formData, setFormData] = useState({
@@ -16,12 +17,16 @@ const Contact = () => {
         e.preventDefault();
         setLoading(true);
 
-        // Simulate form submission
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        toast.success('Message sent successfully! We\'ll get back to you soon.');
-        setFormData({ name: '', email: '', subject: '', message: '' });
-        setLoading(false);
+        try {
+            await contactAPI.submit(formData);
+            toast.success('Message sent! A confirmation has been sent to ruwaidclothing@gmail.com');
+            setFormData({ name: '', email: '', subject: '', message: '' });
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to send message');
+            console.error(error);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const contactInfo = [
@@ -207,7 +212,44 @@ const Contact = () => {
                         </div>
                     </motion.div>
                 </div>
-                <div className="mt-16 bg-dark-200 rounded-xl overflow-hidden border border-dark-300 h-96">
+
+                {/* FAQ Section */}
+                <div className="mt-24">
+                    <div className="text-center mb-12">
+                        <h2 className="text-3xl font-display font-bold text-white mb-4">Frequently Asked Questions</h2>
+                        <p className="text-gray-400">Quick answers to common inquiries</p>
+                    </div>
+                    <div className="grid md:grid-cols-2 gap-6">
+                        {[
+                            {
+                                q: "What is your delivery timeframe?",
+                                a: "We typically deliver within 3-5 business days across Pakistan. International shipping may take 7-14 days."
+                            },
+                            {
+                                q: "Are all products authentic?",
+                                a: "Yes, 100%. We source directly from authorized brand distributors to ensure genuine quality."
+                            },
+                            {
+                                q: "How can I track my order?",
+                                a: "Once your order is shipped, you'll receive a tracking number via email and SMS."
+                            },
+                            {
+                                q: "What is your return policy?",
+                                a: "We offer a 7-day hassle-free return policy for unworn items with original tags."
+                            }
+                        ].map((faq, i) => (
+                            <div key={i} className="bg-dark-100 border border-dark-300 rounded-xl p-6">
+                                <h3 className="text-white font-semibold mb-2 flex items-center gap-2">
+                                    <span className="w-1.5 h-1.5 bg-gold rounded-full" />
+                                    {faq.q}
+                                </h3>
+                                <p className="text-gray-400 text-sm leading-relaxed">{faq.a}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="mt-24 bg-dark-200 rounded-xl overflow-hidden border border-dark-300 h-96">
                     <iframe
                         src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d14480.207914023756!2d67.0911765!3d24.8614622!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3eb33ea3db108f41%3A0x42d1e02422709112!2sKarachi%2C%20Karachi%20City%2C%20Sindh%2C%20Pakistan!5e0!3m2!1sen!2s!4v1703666666666!5m2!1sen!2s"
                         width="100%"

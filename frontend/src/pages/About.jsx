@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Award, Users, Heart, ShieldCheck, ArrowRight } from 'lucide-react';
+import { Award, Users, Heart, ShieldCheck, ArrowRight, Package, Clock, Sparkles, TrendingUp } from 'lucide-react';
 
 const About = () => {
     const stats = [
@@ -31,6 +31,34 @@ const About = () => {
             title: 'Trusted & Secure',
             description: 'Shop with confidence knowing your transactions are secure and your data is protected.'
         },
+    ];
+
+    const features = [
+        {
+            icon: Package,
+            title: 'Wide Selection',
+            description: 'Browse thousands of products from over 50 premium Pakistani brands, all in one convenient location.'
+        },
+        {
+            icon: Clock,
+            title: 'Fast Delivery',
+            description: 'Quick and reliable shipping across Pakistan. Get your orders delivered within 3-5 business days.'
+        },
+        {
+            icon: Sparkles,
+            title: 'Authentic Products',
+            description: 'Every product is 100% authentic, sourced directly from authorized distributors and brand partners.'
+        },
+        {
+            icon: TrendingUp,
+            title: 'Latest Trends',
+            description: 'Stay ahead with the newest collections and seasonal releases from your favorite fashion brands.'
+        },
+    ];
+
+    const brands = [
+        'J.', 'Bonanza', 'Alkaram', 'Khaadi', 'Gul Ahmed', 'Sana Safinaz',
+        'Nishat Linen', 'Sapphire', 'Outfitters', 'Breakout', 'Limelight', 'Ethnic'
     ];
 
     return (
@@ -87,6 +115,7 @@ const About = () => {
                                 key={stat.label}
                                 initial={{ opacity: 0, y: 20 }}
                                 whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
                                 transition={{ delay: index * 0.1 }}
                                 className="text-center"
                             >
@@ -107,6 +136,7 @@ const About = () => {
                         <motion.div
                             initial={{ opacity: 0, x: -20 }}
                             whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true }}
                         >
                             <h2 className="section-title mb-6">Who We Are</h2>
                             <div className="space-y-4 text-gray-400 leading-relaxed">
@@ -121,7 +151,12 @@ const About = () => {
                                 </p>
                                 <p>
                                     Our mission is simple: to make premium Pakistani fashion accessible, affordable,
-                                    and convenient for everyone.
+                                    and convenient for everyone. Whether you're looking for traditional wear, casual
+                                    outfits, or formal attire, we have something for every occasion and style preference.
+                                </p>
+                                <p>
+                                    With a commitment to quality, authenticity, and customer satisfaction, we've built
+                                    a loyal community of fashion enthusiasts who trust us for their wardrobe needs.
                                 </p>
                             </div>
                         </motion.div>
@@ -129,6 +164,7 @@ const About = () => {
                         <motion.div
                             initial={{ opacity: 0, x: 20 }}
                             whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true }}
                             className="relative"
                         >
                             <div className="aspect-[4/3] rounded-2xl overflow-hidden">
@@ -145,13 +181,59 @@ const About = () => {
                 </div>
             </section>
 
-            {/* Values */}
+            {/* Why Choose Us */}
             <section className="section bg-dark-100">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-12">
                         <motion.h2
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            className="section-title mb-4"
+                        >
+                            Why Choose Us
+                        </motion.h2>
+                        <motion.p
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: 0.1 }}
+                            className="section-subtitle mx-auto"
+                        >
+                            Experience the difference with Ruwaid's Clothing
+                        </motion.p>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {features.map((feature, index) => (
+                            <motion.div
+                                key={feature.title}
+                                initial={{ opacity: 0, y: 20 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: index * 0.1 }}
+                                className="p-6 bg-dark border border-dark-300 rounded-xl 
+                         hover:border-gold/30 transition-colors"
+                            >
+                                <div className="w-12 h-12 bg-gold/10 rounded-xl flex items-center justify-center mb-4">
+                                    <feature.icon className="w-6 h-6 text-gold" />
+                                </div>
+                                <h3 className="text-white font-semibold mb-2">{feature.title}</h3>
+                                <p className="text-gray-400 text-sm">{feature.description}</p>
+                            </motion.div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* Values */}
+            <section className="section">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="text-center mb-12">
+                        <motion.h2
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
                             className="section-title mb-4"
                         >
                             Our Values
@@ -159,10 +241,11 @@ const About = () => {
                         <motion.p
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
                             transition={{ delay: 0.1 }}
                             className="section-subtitle mx-auto"
                         >
-                            What makes us different
+                            The principles that guide everything we do
                         </motion.p>
                     </div>
 
@@ -172,8 +255,9 @@ const About = () => {
                                 key={value.title}
                                 initial={{ opacity: 0, y: 20 }}
                                 whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
                                 transition={{ delay: index * 0.1 }}
-                                className="p-6 bg-dark border border-dark-300 rounded-xl 
+                                className="p-6 bg-dark-100 border border-dark-300 rounded-xl 
                          hover:border-gold/30 transition-colors"
                             >
                                 <div className="w-12 h-12 bg-gold/10 rounded-xl flex items-center justify-center mb-4">
@@ -184,6 +268,52 @@ const About = () => {
                             </motion.div>
                         ))}
                     </div>
+                </div>
+            </section>
+
+            {/* Brands We Carry */}
+            <section className="section bg-dark-100">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="text-center mb-12">
+                        <motion.h2
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            className="section-title mb-4"
+                        >
+                            Brands We Carry
+                        </motion.h2>
+                        <motion.p
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: 0.1 }}
+                            className="section-subtitle mx-auto"
+                        >
+                            Shop from Pakistan's most trusted fashion brands
+                        </motion.p>
+                    </div>
+
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4"
+                    >
+                        {brands.map((brand, index) => (
+                            <motion.div
+                                key={brand}
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                whileInView={{ opacity: 1, scale: 1 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: index * 0.05 }}
+                                className="p-6 bg-dark border border-dark-300 rounded-xl text-center
+                                         hover:border-gold/30 hover:bg-dark-200 transition-all"
+                            >
+                                <span className="text-lg font-display font-bold text-white">{brand}</span>
+                            </motion.div>
+                        ))}
+                    </motion.div>
                 </div>
             </section>
 
@@ -208,6 +338,7 @@ const About = () => {
                     <motion.h2
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
                         className="section-title mb-6"
                     >
                         Ready to Explore?
@@ -215,6 +346,7 @@ const About = () => {
                     <motion.p
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
                         transition={{ delay: 0.1 }}
                         className="text-gray-400 text-lg mb-8"
                     >

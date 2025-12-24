@@ -134,4 +134,9 @@ export const uploadAPI = {
     }),
 };
 
+// Contact API
+export const contactAPI = {
+    submit: (data) => api.post('/contact', data),
+};
+
 export default api;
