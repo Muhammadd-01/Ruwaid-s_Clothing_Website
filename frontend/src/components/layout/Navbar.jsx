@@ -140,17 +140,6 @@ const Navbar = () => {
                                                     <Package className="w-4 h-4" />
                                                     <span>My Orders</span>
                                                 </Link>
-                                                {isAdmin && (
-                                                    <Link
-                                                        to="/admin"
-                                                        onClick={() => setIsProfileOpen(false)}
-                                                        className="flex items-center space-x-3 px-3 py-2 text-gold hover:bg-dark-200 
-                                     rounded-lg transition-colors duration-200"
-                                                    >
-                                                        <LayoutDashboard className="w-4 h-4" />
-                                                        <span>Admin Panel</span>
-                                                    </Link>
-                                                )}
                                             </div>
 
                                             <div className="p-2 border-t border-dark-300">

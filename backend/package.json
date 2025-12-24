@@ -9,7 +9,12 @@
     "dev": "nodemon server.js",
     "seed": "node config/seed.js"
   },
-  "keywords": ["ecommerce", "mern", "clothing", "api"],
+  "keywords": [
+    "ecommerce",
+    "mern",
+    "clothing",
+    "api"
+  ],
   "author": "Ruwaid's Clothing",
   "license": "ISC",
   "dependencies": {

@@ -23,6 +23,12 @@ A full-stack MERN (MongoDB, Express.js, React, Node.js) e-commerce web applicati
 - **User Management** - View users, update roles, delete accounts
 - **Role-Based Access** - Admin and Super Admin levels
 
+### Admin Panel Access
+The Admin Panel is built directly into the frontend application. To access it:
+1. Login with an Admin or Super Admin account.
+2. Click on your profile icon in the navbar.
+3. Select "Admin Panel" from the dropdown menu, or navigate directly to `/admin`.
+
 ## 🛠️ Tech Stack
 
 ### Backend

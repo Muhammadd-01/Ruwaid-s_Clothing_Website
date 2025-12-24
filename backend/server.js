@@ -13,7 +13,30 @@ import brandRoutes from './routes/brandRoutes.js';
 import categoryRoutes from './routes/categoryRoutes.js';
 import cartRoutes from './routes/cartRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
-import adminRoutes from './routes/adminRoutes.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+// ... other imports
+import uploadRoutes from './routes/uploadRoutes.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// ... existing code ...
+
+// Serve static files from uploads directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// API Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/brands', brandRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/cart', cartRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/upload', uploadRoutes);
+
 
 // Load env vars
 dotenv.config();
@@ -27,7 +50,24 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Enable CORS
 app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: (origin, callback) => {
+        const allowedOrigins = [
+            process.env.FRONTEND_URL || 'http://localhost:5173',
+            process.env.ADMIN_FRONTEND_URL || 'http://localhost:5174'
+        ];
+
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+
+        if (allowedOrigins.indexOf(origin) === -1) {
+            // For development flexibility, you might want to allow all localhost ports
+            // identifying allowed origins more loosely if strictness isn't required yet
+            // but for now, let's stick to the specific list or add a fallback
+            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+            return callback(new Error(msg), false);
+        }
+        return callback(null, true);
+    },
     credentials: true
 }));
 

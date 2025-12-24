@@ -4,7 +4,6 @@ import { AnimatePresence } from 'framer-motion';
 
 // Layout
 import Layout from './components/layout/Layout';
-import AdminLayout from './components/layout/AdminLayout';
 
 // Public Pages
 import Home from './pages/Home';
@@ -25,17 +24,8 @@ import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import OrderConfirmation from './pages/OrderConfirmation';
 
-// Admin Pages
-import Dashboard from './pages/admin/Dashboard';
-import AdminProducts from './pages/admin/Products';
-import AdminBrands from './pages/admin/Brands';
-import AdminCategories from './pages/admin/Categories';
-import AdminOrders from './pages/admin/Orders';
-import AdminUsers from './pages/admin/Users';
-
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
-import AdminRoute from './components/AdminRoute';
 import ScrollToTop from './components/ScrollToTop';
 
 function App() {
@@ -90,20 +80,6 @@ function App() {
                                 <OrderConfirmation />
                             </ProtectedRoute>
                         } />
-                    </Route>
-
-                    {/* Admin Routes */}
-                    <Route path="/admin" element={
-                        <AdminRoute>
-                            <AdminLayout />
-                        </AdminRoute>
-                    }>
-                        <Route index element={<Dashboard />} />
-                        <Route path="products" element={<AdminProducts />} />
-                        <Route path="brands" element={<AdminBrands />} />
-                        <Route path="categories" element={<AdminCategories />} />
-                        <Route path="orders" element={<AdminOrders />} />
-                        <Route path="users" element={<AdminUsers />} />
                     </Route>
                 </Routes>
             </AnimatePresence>

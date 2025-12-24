@@ -2,6 +2,8 @@ import User from '../models/User.js';
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
 import Cart from '../models/Cart.js';
+import Log from '../models/Log.js';
+import { logAction } from '../utils/logger.js';
 
 // @desc    Get dashboard analytics
 // @route   GET /api/admin/dashboard
@@ -207,6 +209,8 @@ export const updateUserRole = async (req, res, next) => {
         user.role = role;
         await user.save();
 
+        await logAction(req, 'update_role', 'User', user._id, { newRole: role });
+
         res.status(200).json({
             success: true,
             message: 'User role updated successfully',
@@ -253,6 +257,8 @@ export const deleteUser = async (req, res, next) => {
 
         // Delete user
         await user.deleteOne();
+
+        await logAction(req, 'delete_user', 'User', userId, { email: user.email });
 
         res.status(200).json({
             success: true,
@@ -308,6 +314,8 @@ export const createAdmin = async (req, res, next) => {
             role: 'admin'
         });
 
+        await logAction(req, 'create_admin', 'User', admin._id, { email });
+
         res.status(201).json({
             success: true,
             message: 'Admin created successfully',
@@ -320,6 +328,89 @@ export const createAdmin = async (req, res, next) => {
                 }
             }
         });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// @desc    Get admin activity logs
+// @route   GET /api/admin/logs
+// @access  Private/SuperAdmin
+export const getLogs = async (req, res, next) => {
+    try {
+        const { page = 1, limit = 20 } = req.query;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+
+        const logs = await Log.find()
+            .populate('admin', 'name email')
+            .sort('-createdAt')
+            .skip(skip)
+            .limit(parseInt(limit));
+
+        const total = await Log.countDocuments();
+
+        res.status(200).json({
+            success: true,
+            data: {
+                logs,
+                pagination: {
+                    page: parseInt(page),
+                    limit: parseInt(limit),
+                    total,
+                    pages: Math.ceil(total / parseInt(limit))
+                }
+            }
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// @desc    Export data (CSV)
+// @route   GET /api/admin/export/:type
+// @access  Private/Admin
+export const exportData = async (req, res, next) => {
+    try {
+        const { type } = req.params;
+        let data = [];
+        let fields = [];
+
+        if (type === 'orders') {
+            const orders = await Order.find().populate('user', 'name email');
+            fields = ['Order Number', 'User Name', 'User Email', 'Total', 'Status', 'Date'];
+            data = orders.map(order => [
+                order.orderNumber,
+                order.user?.name || 'Deleted User',
+                order.user?.email || '-',
+                order.total,
+                order.status,
+                order.createdAt.toISOString()
+            ]);
+        } else if (type === 'products') {
+            const products = await Product.find().populate('brand category', 'name');
+            fields = ['Name', 'Price', 'Stock', 'Brand', 'Category', 'Created At'];
+            data = products.map(product => [
+                product.name,
+                product.price,
+                product.stock,
+                product.brand?.name || '-',
+                product.category?.name || '-',
+                product.createdAt.toISOString()
+            ]);
+        } else {
+            return res.status(400).json({ success: false, message: 'Invalid export type' });
+        }
+
+        // Convert to CSV
+        const csvContent = [
+            fields.join(','),
+            ...data.map(row => row.map(field => `"${field}"`).join(','))
+        ].join('\n');
+
+        res.header('Content-Type', 'text/csv');
+        res.header('Content-Disposition', `attachment; filename="${type}-${new Date().toISOString().split('T')[0]}.csv"`);
+        res.send(csvContent);
+
     } catch (error) {
         next(error);
     }
